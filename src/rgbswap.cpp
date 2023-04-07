@@ -22,7 +22,7 @@ const char *fragmentShaderSource = "#version 330 core\n"
 
 
 // Takes input and closes window if input == q (for quit)
-void process_input(GLFWwindow* window){
+void processInput(GLFWwindow* window){
     if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS){
         glfwSetWindowShouldClose(window, true);
     }
@@ -83,9 +83,9 @@ int main(){
     // vertexBufferObject
     GLuint vBO;
     glGenBuffers(1, &vBO);
-    glBindBuffer(GL_ARRAY_BUFFER, vBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vBO);
 
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     glClearColor(0.80f,0.40f,0.17f,1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -94,7 +94,7 @@ int main(){
                 
     while(!glfwWindowShouldClose(window)){
         float time = float(glfwGetTime());
-        process_input(window);
+        processInput(window);
         if (time - prev_time >= 0.1f){
             angle += 0.1f;
             prev_time = time;
