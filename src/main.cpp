@@ -1,170 +1,122 @@
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include <iostream>
+#include<iostream>
+#include<glad/glad.h>
+#include<GLFW/glfw3.h>
+#include<math.h>
 
-// Vertex shader source code (string of glsl)
-const char *vertex_shader_source = "#version 330 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    "void main()\n"
-    "{\n"
-    "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-    "}\0";
-
-// Fragment shader source code (string of glsl) 
-const char *fragment_shader_source = "#version 330 core\n"
-    "out vec4 FragColor;\n"
-    "void main()\n"
-    "{\n"
-    "   FragColor = vec4(0.8f, 0.3f, 0.02f, 1.0f);\n"
-    "}\n\0";
+#include"shaderclass.h"
+#include"VAO.h"
+#include"VBO.h"
+#include"EBO.h"
 
 
-// Closes window on q press (for quit)
-void process_input(GLFWwindow* window){
-    if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS){
-        glfwSetWindowShouldClose(window, true);
-    }
-}
 
-
-int main(){
-    // Initialize glfw
-    glfwInit();
-    // Configure glfw
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR,4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR,4);
-    // Using opengl CORE profile - only modern functions
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    
-    // Verticies coords
-    GLfloat vertices[] = {
+// Vertices coordinates
+GLfloat vertices[] = {
 //    x      y      z
     -0.5f, -0.5f, 0.0f, // Lower left corner
      0.5f, -0.5f, 0.0f, // Lower right corner
      0.5f,  0.5f, 0.0f, // Top right corner
     -0.5f,  0.5f, 0.0f  // Top left corner
     };
-    GLuint indicies[] = {
-        0, 1, 3,
-        1, 2, 3
-    };
-    // Error handling 
-    GLFWwindow* window = glfwCreateWindow(900,800,"ErasGL", NULL, NULL);
-    if (window == NULL){
-        std::cout << "Failed to create window" << std::endl;
-        glfwTerminate();
-        return -1; 
-    }
+GLuint indices[] = {
+	0, 1, 3,
+	1, 2, 3
+};;
+
+void processInput(GLFWwindow* window);
 
 
-    glfwMakeContextCurrent(window);
-    /* Quick Buffer Rundown: 
-    Screens display frames by changing the pixels of the display to the pixels of a frame
-    Two frames - buffers - space of storage in memory of pixels 
-    Front buffer: information being read to be displayed onto screen
-    Back buffer: information being written 
-    */  
+int main(){
+	// Initialize GLFW
+	glfwInit();
+
+	// Tell GLFW what version of OpenGL we are using 
+	// In this case we are using OpenGL 3.3
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	// Tell GLFW we are using the CORE profile
+	// So that means we only have the modern functions
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+	// Create a GLFWwindow object of 800 by 800 pixels, naming it "YoutubeOpenGL"
+	GLFWwindow* window = glfwCreateWindow(800, 800, "YoutubeOpenGL", NULL, NULL);
+	// Error check if the window fails to create
+	if (window == NULL){
+		std::cout << "Failed to create GLFW window" << std::endl;
+		glfwTerminate();
+		return -1;
+	}
+	// Introduce the window into the current context
+	glfwMakeContextCurrent(window);
+
+	//Load GLAD so it configures OpenGL
+	gladLoadGL();
+	// Specify the viewport of OpenGL in the Window
+	// In this case the viewport goes from x = 0, y = 0, to x = 800, y = 800
+	glViewport(0, 0, 800, 800);
 
 
-    // load GLAD to configure opengl - cannot use OpenGL functions till this is invoked 
-    gladLoadGL();
-    // create viewport of opengl in the glfw window
-    std::cout << glGetString(GL_VERSION) << std::endl;
-    glViewport(0, 0, 900, 800);
 
-    // create shader object
-    GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-    // attach/point shader source (code) to vertex_shader_source
-    glShaderSource(vertex_shader, 1, &vertex_shader_source, NULL);
-    // compile shader (gpu cannot understand our shader source code -> must compile early to machine code)
-    glCompileShader(vertex_shader);
-
-    // same for fragment shader
-    GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment_shader, 1, &fragment_shader_source, NULL);
-    glCompileShader(fragment_shader);
-
-    // time to wrap both shaders in a shader program
-    // create shader program object and get its reference(?)
-    GLuint shader_program = glCreateProgram();
-
-    // attach vertex and fragment shaders to the shader program
-    glAttachShader(shader_program, vertex_shader);
-    glAttachShader(shader_program, fragment_shader);
-    // wrap/link all shaders together into shader program
-    glLinkProgram(shader_program);
-
-    // delete used shader objects
-    glDeleteShader(vertex_shader);
-    glDeleteShader(fragment_shader);
-
-    
-    // create reference containers for VAO and VBO
-    GLuint vertex_array_object, vertex_buffer_object, element_buffer_object;
-
-    // generate buffers
-    glGenVertexArrays(1, &vertex_array_object);
-    glGenBuffers(1, &vertex_buffer_object);
-    glGenBuffers(1, &element_buffer_object);
-
-    // binding - must make a certain object our current/binded object - 
-    // whenever a function is used to affect an object, binded object is affected
-    glBindVertexArray(vertex_array_object);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_buffer_object);
-    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_object);
-
-    // feed in the vertex buffer data from the earlier matrix (verticies)
-    // draw to buffers
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicies), indicies, GL_STATIC_DRAW);
-
-    /*  create an attribute pointer, starts at index 0, size of 3 (3 verticies), type is a glfloat(float)
-        next param checks if data should be normalized, verticies are already between 0-1 so set to false
-        next param checks byte offset between consecutive generic vertex attributes 
-            -> in verticies there are 3 floats, thus the offset is the size of 3xfloats
-
-    */
-
-    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE, 3*sizeof(float),(void*)0);
-    glEnableVertexAttribArray(0);
+	// Generates Shader object using shaders defualt.vert and default.frag
+	Shader shader_program("default.vert", "default.frag");
 
 
-    // bind buffers to 0 to prevent changes
-    glBindBuffer(GL_ARRAY_BUFFER,0);
-    glBindVertexArray(0);
+
+	// Generates Vertex Array Object and binds it
+	VAO VAO1;
+	VAO1.Bind();
+
+	// Generates Vertex Buffer Object and links it to vertices
+	VBO VBO1(vertices, sizeof(vertices));
+	// Generates Element Buffer Object and links it to indices
+	EBO EBO1(indices, sizeof(indices));
+
+	// Links VBO to VAO
+	VAO1.LinkVBO(VBO1, 0);
+	// Unbind all to prevent accidentally modifying them
+	VAO1.Unbind();
+	VBO1.Unbind();
+	EBO1.Unbind();
 
 
-    while(!glfwWindowShouldClose(window)){
 
-        // specify background color
-        glClearColor(0.10f,0.30f,0.35f,1.0f);
-        // clean + assign new color to back buffer
-        glClear(GL_COLOR_BUFFER_BIT);
-        // tells opengl which shader program to use
-        glUseProgram(shader_program);
-        // bind VAO so opengl knows to use it (current vao)
-        glBindVertexArray(vertex_array_object);
-        // draw the triangle using the triangles primative
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        // swap back buffer with front buffer
-        glfwSwapBuffers(window);
-        // process_input closes the program on q
-        process_input(window);
-        // checks events
-        glfwPollEvents();
-    
-    }
+	// Main while loop
+	while (!glfwWindowShouldClose(window)){
+		// Check quit input
+		processInput(window);
+		// Specify the color of the background
+		glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
+		// Clean the back buffer and assign the new color to it
+		glClear(GL_COLOR_BUFFER_BIT);
+		// Tell OpenGL which Shader Program we want to use
+		shader_program.Activate();
+		// Bind the VAO so OpenGL knows to use it
+		VAO1.Bind();
+		// Draw primitives, number of indices, datatype of indices, index of indices
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		// Swap the back buffer with the front buffer
+		glfwSwapBuffers(window);
+		// Take care of all GLFW events
+		glfwPollEvents();
+	}
 
 
-    // deleting created objects/cleaning up
-    glDeleteVertexArrays(1, &vertex_array_object);
-    glDeleteBuffers(1,&vertex_buffer_object);
-    glDeleteProgram(shader_program);
 
-    // destroy window and terminate glfw instance before program ends
-    glfwDestroyWindow(window);
-    glfwTerminate();
-    return 0;
+	// Delete all the objects we've created
+	VAO1.Delete();
+	VBO1.Delete();
+	EBO1.Delete();
+	shader_program.Delete();
+	// Delete window before ending the program
+	glfwDestroyWindow(window);
+	// Terminate GLFW before ending the program
+	glfwTerminate();
+	return 0;
+}
+
+
+void processInput(GLFWwindow* window){
+	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS){
+		glfwSetWindowShouldClose(window, true);
+	}
 }
