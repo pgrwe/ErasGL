@@ -7,7 +7,8 @@
 			"command": "C:\\ProgramData\\chocolatey\\bin\\g++.exe",
 			"args": [
 				"-g",
-				"-I${workspaceFolder}\\include\\external",
+                "-I${workspaceFolder}\\include\\external",
+				"-I${workspaceFolder}\\include\\external\\glm",
 				"-I${workspaceFolder}\\include\\headers",
 				"-L${workspaceFolder}\\lib",
 				"${file}",
