@@ -132,9 +132,9 @@ int main(){
 
 
 		// Code for changing colors with a uniform fragment shader
-		float greenValue = cos(timeval) / 2.0f + 0.5f;
-        float blueValue = cos(timeval) / 2.0f + 0.5f;
-		float redValue = sin(timeval) / 2.0f + 0.5f;
+		float greenValue = cos(timeval) / 4.0f + 0.5f;
+        float blueValue = cos(timeval) / 4.0f + 0.5f;
+		float redValue = sin(timeval) / 4.0f + 0.5f;
 		int vertexColorLocation = glGetUniformLocation(shader_program.ID, "uniColor");
 		glUniform4f(vertexColorLocation, redValue, greenValue, blueValue, 1.0f);
 
